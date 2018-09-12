@@ -11,7 +11,10 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+import networkx as nx
 
+
+#%%
 
 oscillator = models.Generic2dOscillator()
 white_matter = connectivity.Connectivity(load_default=True)
