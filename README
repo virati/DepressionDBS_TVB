@@ -1,5 +1,19 @@
-# TVB DBS Control Project
+# TVB Depression DBS Networks
 
-This project is focused on developing a framework for controller design in a simplified brain network model for depression.
+The goal of this project is to develop a set of network models that can be used in a flexible way for a variety of data, modeling, and mathematical projects.
 
-We will work with basic functional dynamics/drift dynamics here
+
+## Structure
+
+
+### Scripts
+We'll have a set of scripts that implement various dynamical network models through the TVB
+
+* Kuramoto Model
+* Jansen-Rit Model
+* LEGACY: Wilson-Cowan Model
+* Generic Hopf
+
+
+### Model Library
+Aspirationally, we also want to provide a library that wraps TVB models with an interface that immediately enables control-theoretic frameworks and analysis.

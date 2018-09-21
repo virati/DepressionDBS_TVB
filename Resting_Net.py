@@ -17,12 +17,12 @@ import time
 
 
 
-def run_sim(conn,cs, D, cv=3.0, dt=0.5, simlen=1e3):
+def run_sim(conn,D=1,cs=0.3,  cv=3.0, dt=0.5, simlen=1e3):
     sim = simulator.Simulator(
-            model=models.Generic2dOscillator(a=0.0),
+            model=models.Generic2dOscillator(a=0.4),
             connectivity=conn,
             coupling=coupling.Linear(a=cs),
-            integrator=integrators.HeunStochastic(dt=dt,noise=noise.Additive(nsig=array([D]))),
+            integrator=integrators.HeunStochastic(dt=dt,noise=noise.Additive(nsig=np.array([D]))),
             monitors=monitors.TemporalAverage(period=5.0)
             )
     
@@ -32,4 +32,9 @@ def run_sim(conn,cs, D, cv=3.0, dt=0.5, simlen=1e3):
     return t, y[:,0,:,0]
 
 
-conn = connectivity.Connectivity(load_default=True)
+conn = connectivity.Connectivity.from_file("connectivity_192.zip")
+
+ret = run_sim(conn)
+
+plt.figure()
+plt.plot(ret[0],ret[1])
