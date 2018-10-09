@@ -17,7 +17,7 @@ import networkx as nx
 
 
 
-import mne
+#import mne
 
 #%%
 
