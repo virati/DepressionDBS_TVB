@@ -4,7 +4,7 @@
 Created on Wed Sep 12 12:54:38 2018
 
 @author: virati
-Resting Network Tutorial and extensions
+Main file for stimulation network with OnT/OffT 130Hz tractography informed stimulation
 """
 
 import sys

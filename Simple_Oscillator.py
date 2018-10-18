@@ -14,7 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import networkx as nx
-
+import numpy
+import numpy.random as random
 
 
 #import mne
@@ -32,7 +33,7 @@ white_matter.speed = np.array([4.0])
 white_matter_coupling = coupling.SigmoidalJansenRit(a=10)
 
 
-if 0:
+def plot_conn():
     white_matter.configure()
     plot_connectivity(connectivity=white_matter)
 
@@ -45,7 +46,12 @@ sigma[3] = phi_n_scaling
 
 heunint = integrators.HeunStochastic(dt=2**-4,noise=noise.Additive(nsig=sigma))
 
+
+#%%
+#Monitors/things to watch
+
 mon_raw = monitors.Raw()
+#This temporally averages??
 mon_tavg = monitors.TemporalAverage(period=2**-2)
 
 what_to_watch = (mon_raw,mon_tavg)
@@ -56,7 +62,8 @@ skin = surfaces.SkullSkin(load_default=True)
 skin.configure()
 
 sens_eeg.configure()
-if 0:
+
+def plot_sensors():
     plt.figure()
     ax = plt.subplot(111,projection='3d')
     x,y,z = white_matter.centres.T
@@ -67,67 +74,34 @@ if 0:
 #%%
 # Stimulation here
 eqn_t = equations.PulseTrain()
-eqn_t.parameters['onset']=1.5e2
+eqn_t.parameters['onset']=2.5e3
 eqn_t.parameters['T'] = 100.0
 eqn_t.parameters['tau'] = 50.0
 
 weights = np.zeros((192,))
-weights[[14,52,100,120]]=0.9
+#make a random set of N values between 0 and 192
+stim_nodes = np.ceil(192*random.sample(20)).astype(int)
+weights[stim_nodes]=0.9
 
 stimulus = patterns.StimuliRegion(temporal=eqn_t,connectivity=white_matter,weight=weights)
-
+stimulus.configure_space()
+stimulus.configure_time(numpy.arange(0,3e3,2**-4))
+#plot_pattern(stimulus)
     
 #%%
-
-sim = simulator.Simulator(model=jrm, connectivity=white_matter,coupling=white_matter_coupling,integrator=heunint,monitors=what_to_watch,simulation_length=1e3,stimulus=stimulus)
+# Main simulator configuration
+sim = simulator.Simulator(model=jrm, connectivity=white_matter,coupling=white_matter_coupling,integrator=heunint,monitors=what_to_watch,simulation_length=5e3,stimulus=stimulus)
 sim.configure()
 
+#%%
+# Main simulation run
 (time,data) = sim.run()
 
 voltages = data[1]
 
 #%%
 plt.figure()
-plt.plot(time[0][:4000],voltages[:,0,:,0].squeeze(),'k',alpha=0.1)
-
-
-
-#%%
-def DEPR_plot_time():
-    
-    ###
-    raw_data = []
-    raw_time = []
-    tavg_data = []
-    tavg_time = []
-    
-    for raw,tavg in sim(simulation_length=2**10):
-        
-        
-        if not raw is None:
-            raw_time.append(raw[0])
-            raw_data.append(raw[1])
-            
-        if not tavg is None:
-            tavg_time.append(tavg[0])
-            tavg_data.append(tavg[1])
-            
-            
-    RAW = np.array(raw_data)
-    TAVG = np.array(tavg_data)
-    
-    #%%
-    plt.figure(1)
-    plt.plot(raw_time,RAW[:,0,:,0])
-    plt.title('Raw - State Var 0')
-    
-    plt.figure(2)
-    plt.plot(tavg_time,TAVG[:,0,:,0])
-    plt.title('Temporal Avg')
-    
-    plt.show()
-
-
+plt.plot(time[0][:20000],voltages[:,0,:,0].squeeze(),'k',alpha=0.1)
 
 #%%
 # NetworkX stuff
