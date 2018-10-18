@@ -12,29 +12,42 @@ from tvb.simulator.lab import *
 import scipy.stats
 from sklearn.decomposition import FastICA
 import time
+import numpy as np
+import matplotlib.pyplot as plt
 
 #%%
+conn = connectivity.Connectivity(load_default=True)
+
+#conn = connectivity.Connectivity.from_file("connectivity_192.zip")
+weighting = np.zeros((76,))
+weighting[[14, 52, 11, 49]] = 0.1
 
 
+eqn_t = equations.PulseTrain()
+eqn_t.parameters['onset'] = 1.5e3
+eqn_t.parameters['T'] = 100.0
+eqn_t.parameters['tau'] = 50.0
 
-def run_sim(conn,D=1,cs=0.3,  cv=3.0, dt=0.5, simlen=1e3):
-    sim = simulator.Simulator(
-            model=models.Generic2dOscillator(a=0.4),
-            connectivity=conn,
-            coupling=coupling.Linear(a=cs),
-            integrator=integrators.HeunStochastic(dt=dt,noise=noise.Additive(nsig=np.array([D]))),
-            monitors=monitors.TemporalAverage(period=5.0)
-            )
-    
-    sim.configure()
-    
-    (t,y), = sim.run(simulation_length=simlen)
-    return t, y[:,0,:,0]
+stimulus = patterns.StimuliRegion(temporal=eqn_t,connectivity=conn,weight=weighting)
 
+stimulus.configure_space()
+stimulus.configure_time(np.arange(0.,3e3,2**-4))
 
-conn = connectivity.Connectivity.from_file("connectivity_192.zip")
+plot_pattern(stimulus)
 
-ret = run_sim(conn)
+#%%
+sim = simulator.Simulator(model=models.Generic2dOscillator(a=0.3,tau=2),
+                          connectivity=conn,
+                          coupling=coupling.Difference(a=7e-4),
+                          integrator=integrators.HeunStochastic(dt=0.5,noise=noise.Additive(nsig=5e-5)),
+                          monitors=(monitors.TemporalAverage(period=1.0),),
+                          stimulus=stimulus,
+                          simulation_length=5e3,).configure()
 
+(tavg_time,tavg_data), = sim.run()
+                          
 plt.figure()
-plt.plot(ret[0],ret[1])
+plt.plot(tavg_time, tavg_data[:, 0, :, 0], 'k', alpha=0.1)
+plt.plot(tavg_time, tavg_data[:, 0, :, 0].mean(axis=1), 'r', alpha=1)
+plt.ylabel("Temporal average")
+plt.xlabel('Time (ms)')
