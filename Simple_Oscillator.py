@@ -21,7 +21,6 @@ import numpy.random as random
 #import mne
 
 #%%
-
 #oscillator = models.Generic2dOscillator()
 jrm = models.JansenRit(mu=0.0,v0=6.0)
 
