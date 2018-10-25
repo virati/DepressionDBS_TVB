@@ -17,12 +17,16 @@ import networkx as nx
 import numpy
 import numpy.random as random
 
+import scipy.signal as sig
+
 
 #import mne
 
 #%%
 #oscillator = models.Generic2dOscillator()
 jrm = models.JansenRit(mu=0.0,v0=6.0)
+
+#use_model = oscillator
 
 #%%
 # Handle Connectivity now
@@ -43,6 +47,7 @@ phi_n_scaling = (jrm.a * jrm.A * (jrm.p_max - jrm.p_min) * 0.5)**2 / 2
 sigma = np.zeros(6)
 sigma[3] = phi_n_scaling
 
+
 heunint = integrators.HeunStochastic(dt=2**-4,noise=noise.Additive(nsig=sigma))
 
 
@@ -54,6 +59,7 @@ mon_raw = monitors.Raw()
 mon_tavg = monitors.TemporalAverage(period=2**-2)
 
 what_to_watch = (mon_raw,mon_tavg)
+#what_to_watch = (mon_raw)
 
 #%%
 sens_eeg = sensors.SensorsEEG(load_default=True)
@@ -73,19 +79,19 @@ def plot_sensors():
 #%%
 # Stimulation here
 eqn_t = equations.PulseTrain()
-eqn_t.parameters['onset']=2.5e3
+eqn_t.parameters['onset']=1.5e3
 eqn_t.parameters['T'] = 100.0
 eqn_t.parameters['tau'] = 50.0
 
 weights = np.zeros((192,))
 #make a random set of N values between 0 and 192
 stim_nodes = np.ceil(192*random.sample(20)).astype(int)
-weights[stim_nodes]=0.9
+weights[stim_nodes]=10
 
 stimulus = patterns.StimuliRegion(temporal=eqn_t,connectivity=white_matter,weight=weights)
 stimulus.configure_space()
 stimulus.configure_time(numpy.arange(0,3e3,2**-4))
-#plot_pattern(stimulus)
+plot_pattern(stimulus)
     
 #%%
 # Main simulator configuration
@@ -100,7 +106,18 @@ voltages = data[1]
 
 #%%
 plt.figure()
-plt.plot(time[0][:20000],voltages[:,0,:,0].squeeze(),'k',alpha=0.1)
+for ii in range(4):
+    plt.subplot(4,1,ii+1)
+    plt.plot(voltages[:,ii,:,0].squeeze(),'k',alpha=0.1)
+    
+    
+#%%
+select_state = 1
+NFFT = 512
+plt.figure()
+F,T,SG = sig.spectrogram(voltages[:,select_state,92,0].squeeze().T,nperseg=NFFT,noverlap=0.5*NFFT,window=sig.get_window('blackmanharris',NFFT),fs=16)
+
+plt.pcolormesh(T,F,10*np.log10(SG),rasterized=True)
 
 #%%
 # NetworkX stuff
