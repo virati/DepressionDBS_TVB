@@ -8,6 +8,7 @@ Main file for stimulation network with OnT/OffT 130Hz tractography informed stim
 """
 
 import sys
+sys.path.append('/home/virati/Dropbox/projects/libs/tvb-library/')
 from tvb.simulator.lab import *
 import scipy.stats
 from sklearn.decomposition import FastICA
